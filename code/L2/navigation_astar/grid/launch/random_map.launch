@@ -1,0 +1,43 @@
+<launch>
+   <arg name="map_size_x" default="60.0"/>
+   <arg name="map_size_y" default="60.0"/>
+
+   <arg name="start_x" default=" 0.0"/>
+   <arg name="start_y" default=" 0.0"/>
+
+   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find grid)/launch/rviz_config/demo.rviz"/> 
+
+   <node pkg ="grid" name ="random_complex" type ="random_complex" output = "screen">    
+      <param name="init_state_x"   value="$(arg start_x)"/>
+      <param name="init_state_y"   value="$(arg start_y)"/>
+
+      <param name="map/x_size"     value="$(arg map_size_x)" />
+      <param name="map/y_size"     value="$(arg map_size_y)" />
+      
+      <param name="map/obs_num"        value="280"/> 
+       <param name="map/resolution"     value="0.1"/>       
+
+      <param name="ObstacleShape/lower_rad" value="0.8"/>
+      <param name="ObstacleShape/upper_rad" value="0.7"/>
+      <param name="ObstacleShape/lower_hei" value="0.0"/>
+      <param name="ObstacleShape/upper_hei" value="0.0"/> 
+      
+      <param name="sensing/rate"   value="5"/>        
+  </node>
+
+  <node pkg="grid" type="call_node" name="call_node" output="screen" required = "true">
+      <remap from="/call_node/waypoints"       to="/waypoint_generator/waypoints"/>
+      <remap from="/call_node/map"             to="/random_complex/global_map"/> 
+      <param name="map/resolution"   value="0.1" />
+      <param name="map/x_size"       value="$(arg map_size_x)"/>
+      <param name="map/y_size"       value="$(arg map_size_y)"/>
+      <param name="planning/start_x" value="$(arg start_x)"/>
+      <param name="planning/start_y" value="$(arg start_y)"/>
+  </node>
+
+   <node pkg="waypoint" name="waypoint_generator" type="waypoint_generator" output="screen">
+      <remap from="~goal" to="/goal"/>
+      <param name="waypoint_type" value="manual-lonely-waypoint"/>    
+  </node>
+
+</launch>
