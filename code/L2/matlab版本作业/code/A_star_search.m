@@ -1,4 +1,4 @@
-function path = A_star_search(map,MAX_X,MAX_Y, hn_option)
+function [path, OPEN] = A_star_search(map,MAX_X,MAX_Y, hn_option)
 %%
 %This part is about map/obstacle/and other settings
     %pre-process the grid map, add offset
@@ -87,7 +87,7 @@ function path = A_star_search(map,MAX_X,MAX_Y, hn_option)
         if (xParent == xTarget) && (yParent == yTarget)
         % If the expanded node is the path, then break loop and show path
             fprintf(" ==> Find the path! %s as heuristic! \n", hn_option);
-            fprintf(" ==> Path length is %.2f \n", gParent)
+            fprintf(" ==> Path length is %.2f \n", gParent);
             break;
         else
         % If the expanded node is not the goal, then put neighbors into

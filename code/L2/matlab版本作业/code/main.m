@@ -13,15 +13,15 @@ MAX_X = 250;
 MAX_Y = 250;
 map = obstacle_map(xStart, yStart, xTarget, yTarget, MAX_X, MAX_Y);
 
-hn_option = 'Manhattan'; % 'Distance', 'Manhattan', or 'Dijkstra'
+hn_option = 'Dijkstra'; % 'Distance', 'Manhattan', or 'Dijkstra'
 
 tic
 % Waypoint Generator Using the A* 
-path = A_star_search(map, MAX_X,MAX_Y, hn_option);
+[path, OPEN] = A_star_search(map, MAX_X,MAX_Y, hn_option);
 toc
 
 % visualize the 2D grid map
-visualize_map(map, path, []);
+visualize_map(map, path, OPEN);
 
 % save map
 % save('Data/map.mat', 'map', 'MAX_X', 'MAX_Y');
