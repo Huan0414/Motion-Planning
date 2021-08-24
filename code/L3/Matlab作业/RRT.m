@@ -2,69 +2,96 @@
 %Author: Chaoqun Wang
 %Date: 2019-10-15
 %***************************************
-%% 流程初始化
+%% ?????
 clc
 clear all; close all;
-x_I=1; y_I=1;           % 设置初始点
-x_G=700; y_G=700;       % 设置目标点（可尝试修改终点）
-Thr=50;                 % 设置目标点阈值
-Delta= 30;              % 设置扩展步长
-%% 建树初始化
-T.v(1).x = x_I;         % T是我们要做的树，v是节点，这里先把起始点加入到T里面来
+x_I=1; y_I=1;           % ?????
+x_G=700; y_G=700;       % ??????????????
+Thr=50;                 % ???????
+Delta= 30;              % ??????
+%% ?????
+T.v(1).x = x_I;         % T????????v??????????????T???
 T.v(1).y = y_I; 
-T.v(1).xPrev = x_I;     % 起始节点的父节点仍然是其本身
+T.v(1).xPrev = x_I;     % ??????????????
 T.v(1).yPrev = y_I;
-T.v(1).dist=0;          % 从父节点到该节点的距离，这里可取欧氏距离
+T.v(1).dist=0;          % ????????????????????
 T.v(1).indPrev = 0;     %
-%% 开始构建树，作业部分
+
+Nodes = [x_I,y_I];     % only save the coordinates of nodes in the tree
+%% ??????????
 figure(1);
 ImpRgb=imread('newmap.png');
 Imp=rgb2gray(ImpRgb);
 imshow(Imp)
-xL=size(Imp,2);%地图x轴长度
-yL=size(Imp,1);%地图y轴长度
+xL=size(Imp,2);%??x???
+yL=size(Imp,1);%??y???
 hold on
 plot(x_I, y_I, 'ro', 'MarkerSize',10, 'MarkerFaceColor','r');
-plot(x_G, y_G, 'go', 'MarkerSize',10, 'MarkerFaceColor','g');% 绘制起点和目标点
+plot(x_G, y_G, 'go', 'MarkerSize',10, 'MarkerFaceColor','g');% ????????
 count=1;
 bFind = false;
 
 for iter = 1:3000
     x_rand=[];
-    %Step 1: 在地图中随机采样一个点x_rand
-    %提示：用（x_rand(1),x_rand(2)）表示环境中采样点的坐标
+    %Step 1: ???????????x_rand
+    %?????x_rand(1),x_rand(2)????????????
+    x_rand(1) = randi([0, xL],1);
+    x_rand(2) = randi([0, yL],1);
     
     x_near=[];
-    %Step 2: 遍历树，从树中找到最近邻近点x_near 
-    %提示：x_near已经在树T里
+    %Step 2: ??????????????x_near 
+    %???x_near????T?
+    dis = (Nodes(:,1) - x_rand(1)).*(Nodes(:,1) - x_rand(1)) ...
+           + (Nodes(:,2) - x_rand(2)).*(Nodes(:,2) - x_rand(2));
+    [dis_min, index] = min(dis);
+    x_near(1) = Nodes(index, 1);
+    x_near(2) = Nodes(index, 2);
     
     x_new=[];
-    %Step 3: 扩展得到x_new节点
-    %提示：注意使用扩展步长Delta
+    %Step 3: ????x_new??
+    %???????????Delta
+    dis_min = sqrt(dis_min);
+    delta_x = (x_rand(1) - x_near(1)) * Delta/dis_min;
+    delta_y = (x_rand(2) - x_near(2)) * Delta/dis_min;
+    x_new(1) = x_near(1) + delta_x;
+    x_new(2) = x_near(2) + delta_y;
     
-    %检查节点是否是collision-free
-    %if ~collisionChecking(x_near,x_new,Imp) 
-    %    continue;
-    %end
+    %???????collision-free
+    if ~collisionChecking(x_near,x_new,Imp) 
+       continue;
+    end
     count=count+1;
     
-    %Step 4: 将x_new插入树T 
-    %提示：新节点x_new的父节点是x_near
+    %Step 4: ?x_new???T 
+    %??????x_new?????x_near
+    T.v(count).x = x_new(1);         
+    T.v(count).y = x_new(2); 
+    T.v(count).xPrev = x_near(1);   
+    T.v(count).yPrev = x_near(2);
+    T.v(count).dist  = Delta;          
+    T.v(count).indPrev = index;    
+    Nodes = [Nodes; x_new(1), x_new(2)];
     
-    %Step 5:检查是否到达目标点附近 
-    %提示：注意使用目标点阈值Thr，若当前节点和终点的欧式距离小于Thr，则跳出当前for循环
+    %Step 5:??????????? 
+    %????????????Thr????????????????Thr??????for??    
+    %Step 6:?x_near?x_new????????
+    %?? 1???plot?????????????????????????plot?????hold on??
+    %?? 2??????????for???????x_near?x_new????????
+    plot(x_new(1), x_new(2),'ro', 'MarkerSize',5, 'MarkerFaceColor','r');
+    plot([x_near(1),x_new(1)],[x_near(2),x_new(2)], 'r','LineWidth',2);
+
+    if (abs(pdist([x_new(1),x_new(2);x_G,y_G],'euclidean')) <= Thr)
+        bFind = true; 
+        break; 
+    end
     
-    %Step 6:将x_near和x_new之间的路径画出来
-    %提示 1：使用plot绘制，因为要多次在同一张图上绘制线段，所以每次使用plot后需要接上hold on命令
-    %提示 2：在判断终点条件弹出for循环前，记得把x_near和x_new之间的路径画出来
-   
-    pause(0.05); %暂停一会，使得RRT扩展过程容易观察
+    pause(0.05); %???????RRT????????
 end
-%% 路径已经找到，反向查询
+%% ???????????
 if bFind
     path.pos(1).x = x_G; path.pos(1).y = y_G;
     path.pos(2).x = T.v(end).x; path.pos(2).y = T.v(end).y;
-    pathIndex = T.v(end).indPrev; % 终点加入路径
+    pathIndex = T.v(end).indPrev; % ??????
     j=0;
     while 1
         path.pos(j+3).x = T.v(pathIndex).x;
@@ -74,8 +101,8 @@ if bFind
             break
         end
         j=j+1;
-    end  % 沿终点回溯到起点
-    path.pos(end+1).x = x_I; path.pos(end).y = y_I; % 起点加入路径
+    end  % ????????
+    path.pos(end+1).x = x_I; path.pos(end).y = y_I; % ??????
     for j = 2:length(path.pos)
         plot([path.pos(j).x; path.pos(j-1).x;], [path.pos(j).y; path.pos(j-1).y], 'b', 'Linewidth', 3);
     end

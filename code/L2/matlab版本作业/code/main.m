@@ -13,7 +13,7 @@ MAX_X = 250;
 MAX_Y = 250;
 map = obstacle_map(xStart, yStart, xTarget, yTarget, MAX_X, MAX_Y);
 
-hn_option = 'Dijkstra'; % 'Distance', 'Manhattan', or 'Dijkstra'
+hn_option = 'Distance'; % (Euclidean)'Distance', 'Manhattan', or 'Dijkstra'
 
 tic
 % Waypoint Generator Using the A* 
