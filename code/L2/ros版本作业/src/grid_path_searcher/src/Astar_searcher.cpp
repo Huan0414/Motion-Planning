@@ -135,34 +135,69 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
 {   
     neighborPtrSets.clear();
     edgeCostSets.clear();
-    /*
-    *
-    STEP 4: finish AstarPathFinder::AstarGetSucc yourself 
-    please write your code below
-    *
-    *
-    */
+    
+    // Find all neighbor points
+    for(int delta_x=-1;delta_x<2;++delta_x){
+		for(int delta_y=-1;delta_y<2;++delta_y){
+			for(int delta_z=-1;delta_z<2;++delta_z){
+				if (delta_x !=0 || delta_y !=0 || delta_z!=0){
+					Vector3i neighbor_idx = currentPtr -> index;
+					neighbor_idx(0) +=  delta_x;
+					neighbor_idx(1) +=  delta_y;
+					neighbor_idx(2) +=  delta_z;
+				
+					if((isFree(neighbor_idx))){
+						if (GridNodeMap[neighbor_idx(0)][neighbor_idx(1)][neighbor_idx(2)] -> id != -1){
+							// put the node into the neighbor set
+							neighborPtrSets.push_back(GridNodeMap[neighbor_idx(0)][neighbor_idx(1)][neighbor_idx(2)]);
+							// define the cost
+							edgeCostSets.push_back(sqrt(delta_x*delta_x + delta_y*delta_y + delta_z*delta_z));
+						}
+					}
+			
+			    }
+			}    
+		}
+	}
+       
 }
 
-double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
+
+double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2, const string heuOption)
 {
     /* 
     choose possible heuristic function you want
     Manhattan, Euclidean, Diagonal, or 0 (Dijkstra)
     Remember tie_breaker learned in lecture, add it here ?
-    *
-    *
-    *
-    STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
-    please write your code below
-    *
-    *
     */
-
-    return 0;
+	double h = 0;
+	double dx, dy, dz;
+	dx = abs(node1->index(0) - node2->index(0));
+	dy = abs(node1->index(1) - node2->index(1));
+	dz = abs(node1->index(2) - node2->index(2));
+    
+    if (heuOption == "Diagonal"){
+		// Use Diagonal as the heuristic function
+		double minIndex = min(dx, min(dy, dz));
+		double medIndex = max(min(dx,dy), min(max(dx,dy),dz));
+		h = dx + dy + dz - (3-sqrt(3))*minIndex - (2-sqrt(2))*(medIndex - minIndex);
+	}
+	else if (heuOption == "Manhattan"){
+		// Use Manhattan as the heuristic function
+		h = dx + dy + dz;
+	}
+    else if (heuOption == "Euclidean"){
+		// Use Euclidean as the heuristic function
+		h = sqrt(dx*dx + dy*dy + dz*dz);
+	}
+   else if (heuOption == "Dijkstra"){
+		h = 0;
+	}
+	
+   return h + h * 0.05;;
 }
-
-void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
+	
+void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt, const string heuOption)
 {   
     ros::Time time_1 = ros::Time::now();    
 
@@ -187,98 +222,67 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
 
     //put start node in open set
     startPtr -> gScore = 0;
-    startPtr -> fScore = getHeu(startPtr,endPtr);   
-    //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
+    startPtr -> fScore = getHeu(startPtr,endPtr,heuOption);   
     startPtr -> id = 1; 
     startPtr -> coord = start_pt;
-    openSet.insert( make_pair(startPtr -> fScore, startPtr) );
-    /*
-    *
-    STEP 2 :  some else preparatory works which should be done before while loop
-    please write your code below
-    *
-    *
-    */
+    openSet.insert( make_pair(startPtr -> fScore, startPtr));
+	GridNodeMap[start_idx(0)][start_idx(1)][start_idx(2)]->id = 1;
+	
     vector<GridNodePtr> neighborPtrSets;
     vector<double> edgeCostSets;
 
     // this is the main loop
     while ( !openSet.empty() ){
-        /*
-        *
-        *
-        step 3: Remove the node with lowest cost function from open set to closed set
-        please write your code below
-        
-        IMPORTANT NOTE!!!
-        This part you should use the C++ STL: multimap, more details can be find in Homework description
-        *
-        *
-        */
+		
+		currentPtr = openSet.begin() -> second; 
+		currentPtr -> id = -1;
+		openSet.erase(openSet.begin());
 
-        // if the current node is the goal 
+        // if the current node is the goal, break loop
         if( currentPtr->index == goalIdx ){
             ros::Time time_2 = ros::Time::now();
             terminatePtr = currentPtr;
-            ROS_WARN("[A*]{sucess}  Time in A*  is %f ms, path cost if %f m", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution );            
+            ROS_WARN("[A*]{sucess}  Time in A*  is %f ms, path cost if %f m, heuristic function is %s", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution, heuOption.c_str());            
             return;
         }
         //get the succetion
-        AstarGetSucc(currentPtr, neighborPtrSets, edgeCostSets);  //STEP 4: finish AstarPathFinder::AstarGetSucc yourself     
-
-        /*
-        *
-        *
-        STEP 5:  For all unexpanded neigbors "m" of node "n", please finish this for loop
-        please write your code below
-        *        
-        */         
-        for(int i = 0; i < (int)neighborPtrSets.size(); i++){
-            /*
-            *
-            *
-            Judge if the neigbors have been expanded
-            please write your code below
-            
-            IMPORTANT NOTE!!!
-            neighborPtrSets[i]->id = -1 : expanded, equal to this node is in close set
-            neighborPtrSets[i]->id = 1 : unexpanded, equal to this node is in open set
-            *        
-            */
-            if(neighborPtr -> id == 0){ //discover a new node, which is not in the closed set and open set
-                /*
-                *
-                *
-                STEP 6:  As for a new node, do what you need do ,and then put neighbor in open set and record it
-                please write your code below
-                *        
-                */
-                continue;
+        AstarGetSucc(currentPtr, neighborPtrSets, edgeCostSets);   
+		//ROS_INFO("AstarPathFinder: get successor !");
+        for(int i = 0; i < (int)neighborPtrSets.size(); ++i){
+			
+			neighborPtr = neighborPtrSets[i];
+            // discover a new node, which is not in the closed set and open set           
+            if(neighborPtr -> id == 0){ 
+ 
+                neighborPtr -> gScore = currentPtr-> gScore +  edgeCostSets[i];
+                neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr,endPtr,heuOption);
+                neighborPtr -> cameFrom = currentPtr;
+                openSet.insert(make_pair(neighborPtr -> fScore, neighborPtr));
+                neighborPtr -> id = 1;
+                continue; 
             }
-            else if(0){ //this node is in open set and need to judge if it needs to update, the "0" should be deleted when you are coding
-                /*
-                *
-                *
-                STEP 7:  As for a node in open set, update it , maintain the openset ,and then put neighbor in open set and record it
-                please write your code below
-                *        
-                */
-                continue;
+            // this node is in open set and need to judge if it needs to update
+            else if(neighborPtr ->id == 1){ 
+                if (neighborPtr -> gScore > (currentPtr-> gScore +  edgeCostSets[i]))
+				{
+					// update costs and parent node
+					neighborPtr -> gScore = (currentPtr-> gScore +  edgeCostSets[i]);
+					neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr,endPtr,heuOption); 
+					neighborPtr -> cameFrom = currentPtr;
+					continue;
+				}                 
             }
-            else{//this node is in closed set
-                /*
-                *
-                please write your code below
-                *        
-                */
-                continue;
-            }
-        }      
-    }
+            else {
+				ROS_WARN ("Neighbor node is in closed set, check the code!");
+                continue;}           
+        } 
+    } 
+    
+          
     //if search fails
     ros::Time time_2 = ros::Time::now();
     if((time_2 - time_1).toSec() > 0.1)
-        ROS_WARN("Time consume in Astar path finding is %f", (time_2 - time_1).toSec() );
+        ROS_WARN("Time consume in Astar path finding is %f", (time_2 - time_1).toSec());
 }
 
 
@@ -286,15 +290,15 @@ vector<Vector3d> AstarPathFinder::getPath()
 {   
     vector<Vector3d> path;
     vector<GridNodePtr> gridPath;
-    /*
-    *
-    *
-    STEP 8:  trace back from the curretnt nodePtr to get all nodes along the path
-    please write your code below
-    *      
-    */
+    
+    GridNodePtr stopPtr = terminatePtr;
+    
+    while(stopPtr -> gScore != 0){
+		gridPath.push_back(stopPtr);
+		stopPtr = stopPtr -> cameFrom;		
+		}	
 
-    for (auto ptr: gridPath)
+    for (auto ptr: gridPath) 
         path.push_back(ptr->coord);
         
     reverse(path.begin(),path.end());

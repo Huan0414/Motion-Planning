@@ -25,7 +25,8 @@ class JPSPathFinder: public AstarPathFinder
         bool hasForced(const Eigen::Vector3i & idx, const Eigen::Vector3i & dir);
         bool jump(const Eigen::Vector3i & curIdx, const Eigen::Vector3i & expDir, Eigen::Vector3i & neiIdx);
 		
-    	void JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
+    	void JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, const std::string heuOption);
+    	double getHeu(GridNodePtr node1, GridNodePtr node2, const std::string heuOption);
 };
 
 #endif

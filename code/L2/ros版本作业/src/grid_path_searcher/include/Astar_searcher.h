@@ -26,7 +26,7 @@ class AstarPathFinder
 		GridNodePtr terminatePtr;
 		std::multimap<double, GridNodePtr> openSet;
 
-		double getHeu(GridNodePtr node1, GridNodePtr node2);
+		double getHeu(GridNodePtr node1, GridNodePtr node2, const std::string heuOption);
 		void AstarGetSucc(GridNodePtr currentPtr, std::vector<GridNodePtr> & neighborPtrSets, std::vector<double> & edgeCostSets);		
 
     	bool isOccupied(const int & idx_x, const int & idx_y, const int & idx_z) const;
@@ -40,7 +40,7 @@ class AstarPathFinder
 	public:
 		AstarPathFinder(){};
 		~AstarPathFinder(){};
-		void AstarGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
+		void AstarGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, const std::string heuOption);
 		void resetGrid(GridNodePtr ptr);
 		void resetUsedGrids();
 

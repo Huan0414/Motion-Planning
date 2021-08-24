@@ -148,7 +148,41 @@ inline bool JPSPathFinder::isFree(const int & idx_x, const int & idx_y, const in
            (data[idx_x * GLYZ_SIZE + idx_y * GLZ_SIZE + idx_z] < 1));
 }
 
-void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
+double JPSPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2, const string heuOption)
+{
+    /* 
+    choose possible heuristic function you want
+    Manhattan, Euclidean, Diagonal, or 0 (Dijkstra)
+    Remember tie_breaker learned in lecture, add it here ?
+    */
+	double h = 0;
+	double dx, dy, dz;
+	dx = abs(node1->index(0) - node2->index(0));
+	dy = abs(node1->index(1) - node2->index(1));
+	dz = abs(node1->index(2) - node2->index(2));
+
+    if (heuOption == "Diagonal"){
+		// Use Diagonal as the heuristic function
+		double minIndex = min(dx, min(dy, dz));
+		double medIndex = max(min(dx,dy), min(max(dx,dy),dz));
+		h = dx + dy + dz - (3-sqrt(3))*minIndex - (2-sqrt(2))*(medIndex - minIndex);
+	}
+	else if (heuOption == "Manhattan"){
+		// Use Manhattan as the heuristic function
+		h = dx + dy + dz;
+	}
+    else if (heuOption == "Euclidean"){
+		// Use Euclidean as the heuristic function
+		h = sqrt(dx*dx + dy*dy + dz*dz);
+	}
+   else if (heuOption == "Dijkstra")
+		h = 0;
+
+   return h;
+}
+
+
+void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, const string heuOption)
 {
     ros::Time time_1 = ros::Time::now();    
 
@@ -173,92 +207,65 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
 
     //put start node in open set
     startPtr -> gScore = 0;
-    startPtr -> fScore = getHeu(startPtr,endPtr);   
-    //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
+    startPtr -> fScore = getHeu(startPtr,endPtr, heuOption);   
     startPtr -> id = 1; 
     startPtr -> coord = start_pt;
     openSet.insert( make_pair(startPtr -> fScore, startPtr) );
-    /*
-    *
-    STEP 2 :  some else preparatory works which should be done before while loop
-    please write your code below
-    *
-    *
-    */
+	GridNodeMap[start_idx(0)][start_idx(1)][start_idx(2)]->id = 1;
+
     double tentative_gScore;
     vector<GridNodePtr> neighborPtrSets;
     vector<double> edgeCostSets;
 
     // this is the main loop
     while ( !openSet.empty() ){
-        /*
-        *
-        *
-        step 3: Remove the node with lowest cost function from open set to closed set
-        please write your code below
-        
-        IMPORTANT NOTE!!!
-        This part you should use the C++ STL: multimap, more details can be find in Homework description
-        *
-        *
-        */
+		
+		currentPtr = openSet.begin() -> second; 
+		currentPtr -> id = -1;
+		openSet.erase(openSet.begin());
 
         // if the current node is the goal 
         if( currentPtr->index == goalIdx ){
             ros::Time time_2 = ros::Time::now();
             terminatePtr = currentPtr;
-            ROS_WARN("[JPS]{sucess} Time in JPS is %f ms, path cost if %f m", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution );    
+            ROS_WARN("[JPS]{sucess} Time in JPS is %f ms, path cost if %f m, heuristic function is %s", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution, heuOption.c_str());    
             return;
         }
         //get the succetion
         JPSGetSucc(currentPtr, neighborPtrSets, edgeCostSets); //we have done it for you
         
-        /*
-        *
-        *
-        STEP 4:  For all unexpanded neigbors "m" of node "n", please finish this for loop
-        please write your code below
-        *        
-        */         
         for(int i = 0; i < (int)neighborPtrSets.size(); i++){
             /*
-            *
-            *
-            Judge if the neigbors have been expanded
-            please write your code below
-            
-            IMPORTANT NOTE!!!
             neighborPtrSets[i]->id = -1 : unexpanded
-            neighborPtrSets[i]->id = 1 : expanded, equal to this node is in close set
-            *        
+            neighborPtrSets[i]->id = 1 : expanded, equal to this node is in close set       
             */
+            neighborPtr = neighborPtrSets[i];
+            tentative_gScore = currentPtr-> gScore +  edgeCostSets[i];
+            
             if(neighborPtr -> id != 1){ //discover a new node
-                /*
-                *
-                *
-                STEP 6:  As for a new node, do what you need do ,and then put neighbor in open set and record it
-                please write your code below
-                *        
-                */
+                neighborPtr -> gScore = currentPtr-> gScore +  edgeCostSets[i];
+                neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr,endPtr,heuOption);
+                neighborPtr -> cameFrom = currentPtr;
+                openSet.insert(make_pair(neighborPtr -> fScore, neighborPtr));
+                neighborPtr -> id = 1;
                 continue;
             }
-            else if(tentative_gScore <= neighborPtr-> gScore){ //in open set and need update
-                /*
-                *
-                *
-                STEP 7:  As for a node in open set, update it , maintain the openset ,and then put neighbor in open set and record it
-                please write your code below
-                *        
-                */
-
-
-                // if change its parents, update the expanding direction 
+            else if(neighborPtr ->id == 1){ 
+               if (tentative_gScore <= neighborPtr-> gScore){//in open set and need update				
+				// update costs and parent node
+				neighborPtr -> gScore = (currentPtr-> gScore +  edgeCostSets[i]);
+				neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr,endPtr,heuOption); 
+				neighborPtr -> cameFrom = currentPtr;
+				
+				 // if change its parents, update the expanding direction 
                 //THIS PART IS ABOUT JPS, you can ignore it when you do your Astar work
                 for(int i = 0; i < 3; i++){
                     neighborPtr->dir(i) = neighborPtr->index(i) - currentPtr->index(i);
                     if( neighborPtr->dir(i) != 0)
-                        neighborPtr->dir(i) /= abs( neighborPtr->dir(i) );
+                        neighborPtr->dir(i) /= abs( neighborPtr->dir(i));
                 }
+				continue;
+				}
             }      
         }
     }

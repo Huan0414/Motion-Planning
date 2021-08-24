@@ -48,7 +48,7 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map);
 
 void visGridPath( vector<Vector3d> nodes, bool is_use_jps );
 void visVisitedNode( vector<Vector3d> nodes );
-void pathFinding(const Vector3d start_pt, const Vector3d target_pt);
+void pathFinding(const Vector3d start_pt, const Vector3d target_pt, const string heuOption);
 
 void rcvWaypointsCallback(const nav_msgs::Path & wp)
 {     
@@ -61,7 +61,10 @@ void rcvWaypointsCallback(const nav_msgs::Path & wp)
                  wp.poses[0].pose.position.z;
 
     ROS_INFO("[node] receive the planning target");
-    pathFinding(_start_pt, target_pt); 
+    // Manhattan, Euclidean, Diagonal, or 0 (Dijkstra)
+    pathFinding(_start_pt, target_pt, "Euclidean"); 
+    // pathFinding(_start_pt, target_pt, "Manhattan"); 
+    // pathFinding(_start_pt, target_pt, "Diagonal"); 
 }
 
 void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map)
@@ -105,15 +108,16 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map)
     _has_map = true;
 }
 
-void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
-{
-    //Call A* to search for a path
-    _astar_path_finder->AstarGraphSearch(start_pt, target_pt);
+void pathFinding(const Vector3d start_pt, const Vector3d target_pt, const string heuOption)
+{	
+	
+    //Call A* to search for a path, print all the time of various heuristic functions.
+    _astar_path_finder->AstarGraphSearch(start_pt, target_pt, heuOption);
 
-    //Retrieve the path
+    //Retrieve the path, with "diagonal" heuristic functions.
     auto grid_path     = _astar_path_finder->getPath();
     auto visited_nodes = _astar_path_finder->getVisitedNodes();
-
+    
     //Visualize the result
     visGridPath (grid_path, false);
     visVisitedNode(visited_nodes);
@@ -124,13 +128,13 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     //_use_jps = 0 -> Do not use JPS
     //_use_jps = 1 -> Use JPS
     //you just need to change the #define value of _use_jps
-#define _use_jps 0
+#define _use_jps 1
 #if _use_jps
     {
         //Call JPS to search for a path
-        _jps_path_finder -> JPSGraphSearch(start_pt, target_pt);
+        _jps_path_finder -> JPSGraphSearch(start_pt, target_pt,  heuOption);
 
-        //Retrieve the path
+        //Retrieve the path, with "diagonal" heuristic functions.
         auto grid_path     = _jps_path_finder->getPath();
         auto visited_nodes = _jps_path_finder->getVisitedNodes();
 
