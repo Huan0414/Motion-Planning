@@ -8,8 +8,8 @@ clear all; close all;
 x_I=1; y_I=1;           % ?????
 x_G=700; y_G=700;       % ??????????????
 Thr=50;                 % ???????
-Delta= 30;              % ??????
-
+Delta= 120;              % ??????
+rng(1);
 %% ?????
 T.v(1).x = x_I;         % T????????v??????????????T???
 T.v(1).y = y_I; 
@@ -69,7 +69,7 @@ for iter = 1:3000
     T.v(count).y = x_new(2); 
     T.v(count).xPrev = x_near(1);   
     T.v(count).yPrev = x_near(2);
-    T.v(count).dist  = Delta;          
+    T.v(count).dist  = T.v(index).dist + Delta;          
     T.v(count).indPrev = index;    
     Nodes = [Nodes; x_new(1), x_new(2)];
     
@@ -83,6 +83,7 @@ for iter = 1:3000
 
     if (abs(pdist([x_new(1),x_new(2);x_G,y_G],'euclidean')) <= Thr)
         bFind = true; 
+        fprintf("Path cost: %.2f \n", T.v(count).dist + pdist([x_new(1),x_new(2); x_G,y_G]));
         break; 
     end
     
