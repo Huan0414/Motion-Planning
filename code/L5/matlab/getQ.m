@@ -25,6 +25,5 @@ function Q = getQ(n_seg, n_order, ts)
         end
         Q = blkdiag(Q, Q_k);
     end
-    spy(Q)
     Q = Q*2; % quadprog solve 1/2x^T*H*x + f*x;
 end
