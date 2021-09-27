@@ -2,6 +2,7 @@ import pickle
 from racetracks import *
 from graph_node import Node
 import matplotlib.pyplot as plt
+from time import time
 
 
 seed = np.random.seed(1234)
@@ -39,7 +40,9 @@ def build_up_graph(grid, save_path):
             # Note: Both the two heuristics are not the best
             # example-1 heuristic = np.linalg.norm(m_dist, axis=1)  # Euclidean distance
             # example-2 heuristic = m_dist[:, 0] + m_dist[:, 1]  # Mahalonobis distance
-
+            # example-3 heuristic = m_dist[:,0] + m_dist[:,1] + (np.sqrt(2)-2)*np.min(m_dist[:,0],m_dist[:,1]) # Exact minimum distance
+            heuristic = np.linalg.norm(m_dist, axis=1)/3
+            
             state.g_value = np.min(heuristic)
             state.connect_to_graph(grid)
             graph[state.key] = state
@@ -93,7 +96,6 @@ def visualize_the_best_plan(plan, grid_para):
     plt.show()
 
 
-
 def greedy_policy(idx=0, explore=True):
     start_node = Node(START_LINE[idx][0], START_LINE[idx][1], 0, 0)
     start_key = start_node.key
@@ -126,7 +128,7 @@ def real_time_dynamic_programming():
 
     # IMPORTAN-2: implement RTDP
     # while bellman_error > 0.0001:
-    for i in range(500): # YOU MAY CHANGE THIS VALUE
+    for i in range(80): # YOU MAY CHANGE THIS VALUE
         itr_num += 1
         bellman_error = 0.0
         rand_start = np.random.randint(low=0, high=3, size=1)[0]
@@ -144,15 +146,15 @@ def real_time_dynamic_programming():
                     child_1 = graph[child_key_1]
 
                     # TO BE IMPLEMENTED
-                    expected_cost_uk = ?
+                    expected_cost_uk = 0.9 * (1 + child_9.g_value) + 0.1 * (1 + child_1.g_value)
                     value_uk.append(expected_cost_uk)
 
                 # TO BE IMPLEMENTED
-                current_value = ?
-                bellman_error = ?
+                current_value = min(value_uk)
+                bellman_error += np.linalg.norm(state.g_value - current_value) 
 
                 # TO BE IMPLEMENTED
-                state.g_value = ?
+                state.g_value = min(value_uk)
                 
             # end if
         # end for
@@ -172,8 +174,12 @@ if __name__ == '__main__':
     # build_up_graph(track_map, path)
     pkl_file = open(path, 'rb')
     graph = pickle.load(pkl_file)
+    
+    t1 = time()
     real_time_dynamic_programming()
     plan = track_the_best_plan(idx=3)
+    print("Consumed time: %.2f" % (time()-t1))
+    
     visualize_the_best_plan(plan, track_map)
 
 

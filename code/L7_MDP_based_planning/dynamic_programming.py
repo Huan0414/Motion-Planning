@@ -2,6 +2,8 @@ import pickle
 from racetracks import *
 from graph_node import Node
 import matplotlib.pyplot as plt
+import numpy as np
+from time import time
 
 seed = np.random.seed(1234)
 graph = {}
@@ -117,6 +119,7 @@ def dynamic_programming():
                     child_9 = graph[child_key_9]
                     child_key_1 = state.next_prob_1[child_idx]
                     child_1 = graph[child_key_1]
+                    # Expected step cost
                     expected_cost_uk = 0.9 * (1 + child_9.g_value) + 0.1 * (1 + child_1.g_value)
                     value_uk.append(expected_cost_uk)
                 current_value = min(value_uk)
@@ -125,7 +128,7 @@ def dynamic_programming():
             # end if
         # end for
         bellman_error_list.append(bellman_error)
-        print("{}th iteration: {}".format(itr_num, bellman_error))
+        print("{}th iteration has Bellmann Error: {}".format(itr_num, bellman_error))
     # end while
 
     plt.figure()
@@ -138,10 +141,13 @@ def dynamic_programming():
 if __name__ == '__main__':
     path = './solution/graph_dp.dat'
     track_map = race_track
-    build_up_graph(track_map, path)
+    #build_up_graph(track_map, path)
     graph = pickle.load(open(path, 'rb'))
 
     # solve
+    t1 = time()
     dynamic_programming()
     plan = track_the_best_plan()
+    print("Consumed time: %.2f" % (time()-t1))
+    
     visualize_the_best_plan(plan, track_map)
