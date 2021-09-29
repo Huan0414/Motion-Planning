@@ -5,7 +5,8 @@ clc;
 p_0 = 10;
 v_0 = 0;
 a_0 = 0;
-K=20;
+
+K =20;
 dt=0.2;
 
 log=[0 p_0 v_0 a_0];
@@ -24,7 +25,7 @@ for t=0.2:0.2:10
     %% Solve the optimization problem
     J = quadprog(H,F,[],[]);
     
-    %% Apply the control
+    %% Apply the first control variable
     j = J(1);
     p_0 = p_0 + v_0*dt + 0.5*a_0*dt^2 + 1/6*j*dt^3;
     v_0 = v_0 + a_0*dt + 0.5*j*dt^2;

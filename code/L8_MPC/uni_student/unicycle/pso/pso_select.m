@@ -20,6 +20,8 @@ for i=1:N
     P(i,7)=inf;
 end
 
+k1 = 1;
+k2 = 1;
 for j=1:batch
     for i=1:N
         w = 0.95-(0.95-0.4)/batch*j;
@@ -28,13 +30,24 @@ for j=1:batch
             %--------------------------------------------------------------
             % To be finished by the student:
             %--------------------------------------------------------------
+            % new velocity of each particle
+            P(i,3) = P(i,3) + k1*rand*(global_best(1) - P(i,1)) + k2*rand*(P(i,5)-P(i,1));
+            P(i,4) = P(i,4) + k1*rand*(global_best(2) - P(i,2)) + k2*rand*(P(i,6)-P(i,2));
+            
+            %new position of each particle
+            P(i,1) = P(i,1) + P(i,3);
+            P(i,2) = P(i,2) + P(i,4);
+            
+            %limit
+            P(i,1:2) = limitRange(P(i,1:2));
+            
         end
         %evaluate the particles
         cost = evaluate(R,omega,p0,P(i,1),last_theta-theta,v_ini,P(i,2));
         
         %update the local best
         if cost < P(i,7)
-            P(i,7) = cost;
+            P(i,7)= cost;
             P(i,5)=P(i,1);
             P(i,6)=P(i,2);
         end

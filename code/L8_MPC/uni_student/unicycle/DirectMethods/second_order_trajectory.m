@@ -27,8 +27,6 @@ end
 
 [F,h,success,converge] = nonConvexBisection(H,J2A,J2V,K,v_0,a_0,v_f,a_f,a_max,a_min,j_max,j_min);
 
-
-
 vL=[];
 if(success == 1)
     u=F.u;

@@ -15,8 +15,8 @@ load Map_office_1;
 % and pos is the real position of the vehicle
 %--------------------------------------------------------------------------
 %% Initialize the vehicle state
-x=60;
-y=18;
+x=90;
+y=156;
 theta = 2.5129;
 omega = 0;
 v_c = 0;
@@ -30,7 +30,7 @@ tgt_list=[];
 a_list=[];
 
 %% Simulation starts here
-for n=1:300
+for n=1:700
     % Use the PSO algorithm to selet the best velocity and angular velocity
     % target
     global_best = pso_select(theta,omega,v_c,[x y]',theta_target,v_target);
@@ -98,7 +98,9 @@ end
 grid on;axis equal;
 
 figure;
-plot(pos);
+plot(3.*(pos+10)+1);
+legend('xPixel','yPixel')
 
 figure;
 plot(a_list);
+legend('velocity','theta')
