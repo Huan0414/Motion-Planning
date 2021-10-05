@@ -18,7 +18,7 @@ for i = 1:n_seg
 end
 for i = 1:n_seg-1
     ts(i) = dist(i)/dist_sum*T;
-    t_sum = t_sum+ts(i);
+    t_sum = t_sum+ts(i); 
 end
 ts(n_seg) = T - t_sum;
 

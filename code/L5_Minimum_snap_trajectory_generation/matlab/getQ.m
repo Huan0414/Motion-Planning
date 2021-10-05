@@ -3,7 +3,7 @@ function Q = getQ(n_seg, n_order, ts)
     % need order larger than 5
     assert(n_order>=5);
     
-    for k = 1:n_seg
+    for k = 1:n_seg 
         % initialize Q_k
         Q_k = zeros(n_order+1);
         %#####################################################

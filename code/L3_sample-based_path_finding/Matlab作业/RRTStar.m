@@ -35,7 +35,7 @@ bFind = false;
 lastNode =[];
 pathExist = false;
 
-for iter = 1:3000
+for iter = 1:800
     updatePlot = false;
     
     x_rand=[];
