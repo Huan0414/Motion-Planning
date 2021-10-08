@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "OsqpEigen/OsqpEigen.h"
+#include <Eigen/Dense>
 
 using namespace std;    
 using namespace Eigen;
@@ -48,10 +50,52 @@ Eigen::MatrixXd TrajectoryGeneratorWaypoint::PolyQPGeneration(
     MatrixXd PolyCoeff = MatrixXd::Zero(m, 3 * p_num1d);           // position(x,y,z), so we need (3 * p_num1d) coefficients
     VectorXd Px(p_num1d * m), Py(p_num1d * m), Pz(p_num1d * m);
 
-    /*   Produce Mapping Matrix A to the entire trajectory, A is a mapping matrix that maps polynomial coefficients to derivatives.   */
-    
+	// Initialize all the matrix/vector
+	SparseMatrix<double> Q();
+	VectorXd f();
+	SparseMatrix<double> Aeq();
+	VectorXd Beq();
 
-    
+	
+	Xd Q_values; Q_indices; Q_num;
+	int i_seg, l_seg;
+	double qil;
+	 
+	for (int seg=0;seg<m;seg++){
+		Q_seg = MatrixXd:Zero(p_num1d, p_num1d);
+		
+		for (int i=p_order-1;i>2;i--){
+		
+			for (int l=p_order-1;l>2;l--){
+		
+				i_seg = i + 1;
+				l_seg = l + 1; 
+				qil = power(Time[seg],i_seg+l_seg-7)*i_seg*(i_seg-1)*(i_seg-2)*(i_seg-3)*l_seg*(l_seg-1)*(l_seg-2)*(l_seg-3)/(i_seg+l_seg-4);
+				if (i==l){Q(p_num1d-i_seg, p_num1d-l_seg) = qil;}
+				else {Q(p_num1d-i_seg, p_num1d-l_seg) = qil/2;}
+				
+			} // end for
+		} // end for
+		
+		Q = 
+		
+	} //end for
+
+	OsqpEigen::Solver solver;
+	solver.settings()-->setVerbosity(false);
+	solver.settings()-->setWarmStart(true);
+	
+	solver.data()-->setNumberOfVariables();
+	solver.date()-->setNumberOfConstraints();
+	solver.data()->setHessianMatrix(hessian);
+	solver.data()->setGradient(gradient);
+	solver.data()->setLinearConstraintsMatrix(linearMatrix);
+	solver.data()->setLowerBound(lowerBound);
+	solver.data()->setUpperBound(upperBound);
+	solver.initSolver();
+	
+	Eigen::VectorXd QPSolution;
+	QPSolution = solver.getSolution();
 
 
 
@@ -60,22 +104,7 @@ Eigen::MatrixXd TrajectoryGeneratorWaypoint::PolyQPGeneration(
 
 
 
-    /*   Produce the dereivatives in X, Y and Z axis directly.  */
-    
 
-
-
-
-
-
-
-
-
-
-
-
-    /*   Produce the Minimum Snap cost function, the Hessian Matrix   */
-    
 
 
 

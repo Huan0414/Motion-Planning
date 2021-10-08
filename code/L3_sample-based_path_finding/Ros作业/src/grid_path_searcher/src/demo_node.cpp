@@ -23,6 +23,7 @@
 #include <ompl/base/OptimizationObjective.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 #include <ompl/geometric/SimpleSetup.h>
 
 #include "graph_searcher.h"
@@ -61,16 +62,17 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt);
 void visRRTstarPath(vector<Vector3d> nodes );
 
 void rcvWaypointsCallback(const nav_msgs::Path & wp)
-{     
+{  
     if( wp.poses[0].pose.position.z < 0.0 || _has_map == false )
         return;
-
+	
     Vector3d target_pt;
     target_pt << wp.poses[0].pose.position.x,
                  wp.poses[0].pose.position.y,
                  wp.poses[0].pose.position.z;
 
-    ROS_INFO("[node] receive the planning target");
+    pathFinding(_start_pt, target_pt); 
+    pathFinding(_start_pt, target_pt); 
     pathFinding(_start_pt, target_pt); 
 }
 
@@ -129,13 +131,12 @@ public:
         const ob::RealVectorStateSpace::StateType* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
         /**
-        *
-        *
         STEP 1: Extract the robot's (x,y,z) position from its state
-        *
-        *
         */
-
+        double x = state3D->values[0];
+        double y = state3D->values[1];
+        double z = state3D->values[2];
+		
         return _RRTstar_preparatory->isObsFree(x, y, z);
     }
 };
@@ -181,64 +182,53 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     // Set our robot's starting state
     ob::ScopedState<> start(space);
     /**
-    *
-    *
     STEP 2: Finish the initialization of start state
-    *
-    *
     */
+	start->as<ob::RealVectorStateSpace::StateType>()->values[0]= start_pt(0);
+	start->as<ob::RealVectorStateSpace::StateType>()->values[1]= start_pt(1);
+	start->as<ob::RealVectorStateSpace::StateType>()->values[2]= start_pt(2);
 
     // Set our robot's goal state
     ob::ScopedState<> goal(space);
     /**
-    *
-    *
     STEP 3: Finish the initialization of goal state
-    *
-    *
     */
+	goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = target_pt(0);
+	goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = target_pt(1);
+	goal->as<ob::RealVectorStateSpace::StateType>()->values[2] = target_pt(2);
 
     // Create a problem instance
-
     /**
-    *
-    *
     STEP 4: Create a problem instance, 
     please define variable as pdef
-    *
-    *
     */
-
+	ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
+	
     // Set the start and goal states
     pdef->setStartAndGoalStates(start, goal);
 
     // Set the optimization objective
     /**
-    *
-    *
     STEP 5: Set the optimization objective, the options you can choose are defined earlier:
     getPathLengthObjective() and getThresholdPathLengthObj()
-    *
-    *
     */  
+    pdef->setOptimizationObjective(getPathLengthObjective(si));
 
     // Construct our optimizing planner using the RRTstar algorithm.
     /**
-    *
-    *
     STEP 6: Construct our optimizing planner using the RRTstar algorithm, 
     please define varible as optimizingPlanner
-    *
-    *
     */ 
-
+	ob::PlannerPtr optimizingPlanner(new og::RRTstar(si));
+	//ob::PlannerPtr optimizingPlanner(new og::InformedRRTstar(si));
+	
     // Set the problem instance for our planner to solve
     optimizingPlanner->setProblemDefinition(pdef);
     optimizingPlanner->setup();
 
     // attempt to solve the planning problem within one second of
     // planning time
-    ob::PlannerStatus solved = optimizingPlanner->solve(1.0);
+    ob::PlannerStatus solved = optimizingPlanner->solve(0.5);
 
     if (solved)
     {
@@ -252,12 +242,13 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
         {
             const ob::RealVectorStateSpace::StateType *state = path->getState(path_idx)->as<ob::RealVectorStateSpace::StateType>(); 
             /**
-            *
-            *
             STEP 7: Trandform the found path from path to path_points for rviz display
-            *
-            *
             */ 
+            Vector3d point;
+            point[0] = state->values[0];
+            point[1] = state->values[1];
+            point[2] = state->values[2];
+            path_points.push_back(point);
         }
         visRRTstarPath(path_points);       
     }
@@ -273,7 +264,7 @@ int main(int argc, char** argv)
 
     _grid_map_vis_pub             = nh.advertise<sensor_msgs::PointCloud2>("grid_map_vis", 1);
     _RRTstar_path_vis_pub         = nh.advertise<visualization_msgs::Marker>("RRTstar_path_vis",1);
-
+	
 
     nh.param("map/cloud_margin",  _cloud_margin, 0.0);
     nh.param("map/resolution",    _resolution,   0.2);
