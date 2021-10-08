@@ -1,4 +1,6 @@
 #include <hw_tool.h>
+#include <unsupported/Eigen/Polynomials>
+#include <complex> // imag, complex
 
 using namespace std;
 using namespace Eigen;
@@ -87,18 +89,45 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
 {
     double optimal_cost = 100000; // this just to initial the optimal_cost, you can delete it 
     /*
-                    
-
-
-
     STEP 2: go to the hw_tool.cpp and finish the function Homeworktool::OptimalBVP
     the solving process has been given in the document
-
     because the final point of trajectory is the start point of OBVP, so we input the pos,vel to the OBVP
-
     after finish Homeworktool::OptimalBVP, the Trajctory_Cost will record the optimal cost of this trajectory
-
-
     */
+    
+    // J = T + a/T + b/T^2 + c/T^3;
+    // dJ/dT = T^4 - a*(T^2) - 2b*T - 3c, need to find the positive solution of this polynomial functions.
+    double a = 4.0 * (_start_velocity(0)*_start_velocity(0) + _start_velocity(1)*_start_velocity(1) + _start_velocity(2)*_start_velocity(2));
+    double b = -12.0 * ((_target_position(0) - _start_position(0))* _start_velocity(0) 
+				   + (_target_position(1) - _start_position(1))* _start_velocity(1) 
+				   + (_target_position(2) - _start_position(2))* _start_velocity(2));
+	double c = 12.0 * ((_target_position(0) - _start_position(0))*(_target_position(0) - _start_position(0)) + 
+					 (_target_position(1) - _start_position(1))*(_target_position(1) - _start_position(1)) + 
+					 (_target_position(2) - _start_position(2))*(_target_position(2) - _start_position(2)));
+					 
+	Eigen::PolynomialSolver<double, Eigen::Dynamic> solver;
+	Eigen::VectorXd coeff(5);
+	
+	coeff[0] = -3*c;
+	coeff[1] = -2*b;;
+	coeff[2] = -a;
+	coeff[3] = 0;
+	coeff[4] = 1;
+	
+	solver.compute(coeff);
+	
+	const Eigen::PolynomialSolver<double, Eigen::Dynamic>::RootsType & r = solver.roots();
+
+	double cost;
+	for(int i=0;i<r.rows();i++)
+	{
+		if (r[i].real() > 0 && imag(r[i]) == 0) {
+			cost = r[i].real() + a/r[i].real() + b/(r[i].real()*r[i].real()) + c/(r[i].real()*r[i].real()*r[i].real());
+			//cout << "Optimal cost is:" << imag(r[i]) << endl;
+			if (optimal_cost > cost)
+			optimal_cost = cost;
+		}
+	}
+    
     return optimal_cost;
 }

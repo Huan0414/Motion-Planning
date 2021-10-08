@@ -125,7 +125,6 @@ void trajectoryLibrary(const Vector3d start_pt, const Vector3d start_velocity, c
             TraLibrary[i][j] = new TrajectoryStatePtr [_discretize_step + 1];
             for(int k=0; k <= _discretize_step; k++){   //acc_input_az
                 
-                
                 vector<Vector3d> Position;
                 vector<Vector3d> Velocity;
                 acc_input(0) = double(-_max_input_acc + i * (2 * _max_input_acc / double(_discretize_step)) );
@@ -146,19 +145,20 @@ void trajectoryLibrary(const Vector3d start_pt, const Vector3d start_velocity, c
                 delta_time = _time_interval / double(_time_step);
                 
                 for(int step=0 ; step<=_time_step ; step ++){
-
                     /*
-                    
-
-
-
                     STEP 1: finish the forward integration, the modelling has been given in the document
                     the parameter of forward integration: _max_input_acc|_discretize_step|_time_interval|_time_step   all have been given
-                    use the pos and vel to recored the steps in the trakectory
-
-
-
+                    use the pos and vel to recored the steps in the trajectory
                     */
+ 
+                    pos(0) += vel(0) * delta_time + 0.5 * acc_input(0) * delta_time * delta_time;
+                    pos(1) += vel(1) * delta_time + 0.5 * acc_input(1) * delta_time * delta_time;
+                    pos(2) += vel(2) * delta_time + 0.5 * acc_input(2) * delta_time * delta_time;
+                         
+                    vel(0) += acc_input(0) * delta_time;
+                    vel(1) += acc_input(1) * delta_time;
+                    vel(2) += acc_input(2) * delta_time;
+                    
                     Position.push_back(pos);
                     Velocity.push_back(vel);
                     double coord_x = pos(0);
@@ -170,18 +170,10 @@ void trajectoryLibrary(const Vector3d start_pt, const Vector3d start_velocity, c
                     }
                 }
                 /*
-                    
-
-
-
                     STEP 2: go to the hw_tool.cpp and finish the function Homeworktool::OptimalBVP
                     the solving process has been given in the document
-
                     because the final point of trajectory is the start point of OBVP, so we input the pos,vel to the OBVP
-
                     after finish Homeworktool::OptimalBVP, the Trajctory_Cost will record the optimal cost of this trajectory
-
-
                 */
                 Trajctory_Cost = _homework_tool -> OptimalBVP(pos,vel,target_pt);
 
