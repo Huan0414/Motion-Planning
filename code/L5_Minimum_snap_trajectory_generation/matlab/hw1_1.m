@@ -43,8 +43,8 @@ for i=0:n_seg-1
     Pxi = poly_coef_x(i*n_poly_perseg+1:(i+1)*n_poly_perseg);
     Pyi = poly_coef_y(i*n_poly_perseg+1:(i+1)*n_poly_perseg);
     for t = 0:tstep:ts(i+1)
-        X_n(k)  = polyval(Pxi, t);
-        Y_n(k)  = polyval(Pyi, t);
+        X_n(k) = polyval(Pxi, t);
+        Y_n(k) = polyval(Pyi, t);
         k = k + 1;
     end
 end

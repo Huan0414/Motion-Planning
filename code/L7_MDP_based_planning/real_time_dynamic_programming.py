@@ -49,7 +49,7 @@ def build_up_graph(grid, save_path):
 
     for pnt in START_LINE:
         state = Node(pnt[0], pnt[1], 0, 0)
-        heuristic = np.linalg.norm(np.asarray(FINISH_LINE) - np.array([state.px, state.py]), axis=1)
+        heuristic = np.linalg.norm(np.asarray(FINISH_LINE) - np.array([state.px, state.py]), axis=1)/3
         state.g_value = np.min(heuristic)
         state.connect_to_graph(grid)
         graph[state.key] = state
@@ -127,8 +127,8 @@ def real_time_dynamic_programming():
     bellman_error_list = []
 
     # IMPORTAN-2: implement RTDP
-    # while bellman_error > 0.0001:
-    for i in range(80): # YOU MAY CHANGE THIS VALUE
+    while bellman_error > 0.0001:
+   # for i in range(80): # YOU MAY CHANGE THIS VALUE
         itr_num += 1
         bellman_error = 0.0
         rand_start = np.random.randint(low=0, high=3, size=1)[0]
@@ -171,7 +171,7 @@ def real_time_dynamic_programming():
 if __name__ == '__main__':
     path = './solution/graph_rtdp.dat'
     track_map = race_track
-    # build_up_graph(track_map, path)
+    #build_up_graph(track_map, path)
     pkl_file = open(path, 'rb')
     graph = pickle.load(pkl_file)
     

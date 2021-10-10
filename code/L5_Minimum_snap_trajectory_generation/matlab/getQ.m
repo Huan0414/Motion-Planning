@@ -8,11 +8,11 @@ function Q = getQ(n_seg, n_order, ts)
         Q_k = zeros(n_order+1);
         %#####################################################
         % STEP 1.1: calculate Q_k of the k-th segment 
-        % Q_k = [  0  0  0  0  0  0  0  0  
+        % Q_k = [     
+        %          1/2coff_q7q7  1/2coff_q7q6  1/2coff_q7q5  coff_q7q4   0  0  0  0 
+        %          1/22coff_q6q7  1/2coff_q6q6  coff_q6q5   1/2coff_q6q4   0  0  0  0 
         %                   .......    
-        %          1/2coff_q4q7  1/2coff_q4q6  1/2coff_q4q5  coff_q4q4   0  0  0  0 
-        %          1/22coff_q5q7  1/2coff_q5q6  coff_q5q5   1/2coff_q5q4   0  0  0  0 
-        %                   .......                                          ]               
+        %               0  0  0  0  0  0  0  0  ]               
         for i = flipud(4:n_order)
             for l = flipud(4:n_order)
                 qil = ((ts(k))^(i+l-7))*i*(i-1)*(i-2)*(i-3)*l*(l-1)*(l-2)*(l-3)/(i+l-4);
@@ -25,5 +25,5 @@ function Q = getQ(n_seg, n_order, ts)
         end
         Q = blkdiag(Q, Q_k);
     end
-    Q = Q*2; % quadprog solve 1/2x^T*H*x + f*x;
+%     Q = Q*2; % quadprog solve 1/2x^T*H*x + f*x, can ignored becase f = 0
 end
